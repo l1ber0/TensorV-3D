@@ -79,7 +79,7 @@ npm install --prefix extensions/vscode
 npm run package:vscode
 ```
 
-`build:vscode` 构建前端并将允许打包的 Python 源码复制到插件的 `runtime/`；`package:vscode` 生成 `extensions/vscode/tensorv-0.4.0.vsix`。VSIX 不包含 `.venv`、开发依赖、凭据或公共服务部署配置。构建及 CI 产物不等于 Marketplace 发布，也不会更新线上服务。
+`build:vscode` 构建前端并将允许打包的 Python 源码复制到插件的 `runtime/`；`package:vscode` 生成 `extensions/vscode/tensorv-3d-0.4.2.vsix`。VSIX 不包含 `.venv`、开发依赖、凭据或公共服务部署配置。构建及 CI 产物不等于 Marketplace 发布，也不会更新线上服务。
 
 已有本地 VS Code 的 Windows 环境可验证真实扩展宿主：
 

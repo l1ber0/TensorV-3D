@@ -15,6 +15,7 @@ import { renderDiagnostic } from './diagnostics';
 import './vscode.css';
 import { setupSharing } from './sharing';
 import { validateExperiment, serializeExperiment, parseExperiment } from './experiments';
+import { createSpatialView } from './spatial';
 
 const icons = {
   sidebar: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
@@ -98,6 +99,8 @@ let hovered = null;
 let viewConfigs = { before: null, after: null };
 
 $('#app').innerHTML = layout({ icon, shortcut, automatic, compare, heatmap });
+const spatial = createSpatialView($('#spatial-panel'), api);
+window.addEventListener('pagehide', () => spatial.dispose());
 
 const activeLine = StateEffect.define();
 const lineField = StateField.define({
@@ -438,7 +441,7 @@ function captureExperiment() {
     title: scripts.current().name, code: editor.state.doc.toString(),
     environment: { app: '0.4.1', torch: result?.torch_version || null },
     view: { step: ready ? stepOf(selected) : null, referenceStep: ready && referenceStep !== null ? stepOf(referenceStep) : null,
-      before: viewOf('before'), after: viewOf('after'), compare, heatmap, precision, tab: activeTab } });
+      before: viewOf('before'), after: viewOf('after'), compare, heatmap, precision, tab: activeTab === 'spatial' ? 'canvas' : activeTab } });
 }
 async function restoreExperiment(next, thisRevision, code) {
   const experiment = storedExperiment();
@@ -674,6 +677,8 @@ function renderMetadata(after, before) {
 }
 
 function renderAnalysis() {
+  const pair = getPair();
+  spatial.update(pair.step?.tensors, pair.after?.name, stale);
   const { after } = getPair();
   const current = displayed.after;
   const memory = $('#memory-panel'), statsPanel = $('#stats-panel');
@@ -727,6 +732,7 @@ function updatePlayback() {
   $('#export-data').disabled = !displayed.after || busy || stale || $('#grid-after')?.getAttribute('aria-busy') === 'true';
   $('#memory-panel').classList.toggle('stale-analysis', stale);
   $('#stats-panel').classList.toggle('stale-analysis', stale);
+  if (stale) spatial.update(null, null, true);
 }
 function stopPlayback() {
   clearInterval(playback);
@@ -1174,7 +1180,14 @@ if (host) {
     } catch (error) { toast(error.message); return; }
     sourceRecord = { ...message.source, scriptId: script.id, code: message.code, importKey: key, unavailable: false };
     sourceImports.set(key, { id: script.id, code: message.code });
+    if (message.preview3d) {
+      automatic = true;
+      saveLocal('tensorv:auto', 'true');
+      $('#auto').setAttribute('aria-checked', 'true');
+      $('#auto .switch').classList.add('on');
+    }
     activateScript(script);
+    if (message.preview3d) setTab('spatial');
     setMobileView('inspector');
     $('.workspace').classList.add('focus-mode');
     $('#focus-view').setAttribute('aria-pressed', 'true');

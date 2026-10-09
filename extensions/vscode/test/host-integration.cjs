@@ -104,6 +104,10 @@ async function run() {
                     values: Array.from(document.querySelectorAll('#grid-after .tensor-cell'), node => node.textContent),
                     error: document.querySelector('#error-box')?.hidden ? '' : document.querySelector('#error-box')?.textContent,
                     notice: document.querySelector('#experiment-notice')?.textContent,
+                    spatialVisible: !document.querySelector('#spatial-panel')?.hidden,
+                    spatialSummary: document.querySelector('#spatial-summary')?.textContent,
+                    spatialValues: document.querySelector('#spatial-values')?.textContent,
+                    spatialCanvas: !!document.querySelector('#spatial-panel canvas'),
                   });
                   return;
                 }
@@ -175,14 +179,14 @@ async function run() {
   try {
     assert.equal(vscode.workspace.isTrusted, !untrusted, 'The fixture has the intended workspace trust state');
     assert.ok(pythonPath && fs.existsSync(pythonPath), 'TENSORV_TEST_PYTHON must point to Python with PyTorch');
-    const extension = vscode.extensions.all.find((item) => item.packageJSON.name === 'tensorv');
+    const extension = vscode.extensions.getExtension('l1ber0.tensorv-3d');
     assert.ok(extension, 'TensorV extension is discoverable');
     const folder = vscode.workspace.workspaceFolders?.[0];
     assert.ok(folder, 'The test fixture workspace is open');
     await vscode.workspace.getConfiguration('tensorv', folder.uri).update('pythonPath', pythonPath, vscode.ConfigurationTarget.Workspace);
     await extension.activate();
     const commands = await vscode.commands.getCommands(true);
-    for (const name of ['open', 'openExperiment', 'runFile', 'runSelection', 'selectInterpreter', 'restart']) {
+    for (const name of ['open', 'preview3d', 'openExperiment', 'runFile', 'runSelection', 'selectInterpreter', 'restart']) {
       assert.ok(commands.includes(`tensorv.${name}`), `tensorv.${name} is registered`);
     }
     checks.push('activation and command registration');
@@ -252,6 +256,26 @@ async function run() {
     assert.deepEqual(tensor.slice.values[0], [0, 4, 8]);
     assert.ok(children.length > 0, 'Execution starts the stdio bridge process');
     checks.push('unsaved Python file executes through the real webview and stdio bridge');
+
+    const vectorCode = 'import torch\nv = torch.tensor([1., 2., 3.])\n';
+    await replaceDocument(document, vectorCode);
+    await probe('auto', { value: false });
+    await runCommand('tensorv.preview3d', vectorCode);
+    const vectorView = await viewWhen(state => state.spatialVisible && state.spatialSummary?.includes('1 个向量') && state.spatialValues?.includes('(1, 2, 3)'), 'real VS Code WebGL vector preview');
+    assert.equal(vectorView.automatic, 'true');
+    assert.ok(vectorView.spatialCanvas);
+    let spatialIncoming = incoming.length, spatialOutgoing = outgoing.length;
+    const newVectorCode = 'import torch\nv = torch.tensor([4., 5., 6.])\n';
+    await replaceDocument(document, newVectorCode);
+    await waitExecution(newVectorCode, spatialIncoming, spatialOutgoing);
+    await viewWhen(state => state.spatialValues?.includes('(4, 5, 6)'), 'unsaved edit updates real VS Code 3D vector');
+    spatialIncoming = incoming.length; spatialOutgoing = outgoing.length;
+    const cubeCode = 'import torch\nv = torch.arange(64.).reshape(4,4,4)\n';
+    await replaceDocument(document, cubeCode);
+    await waitExecution(cubeCode, spatialIncoming, spatialOutgoing);
+    await viewWhen(state => state.spatialSummary?.includes('64 个方块'), 'real VS Code WebGL tensor volume');
+    checks.push('3D preview command enables auto-run and renders vectors and cubes after unsaved edits');
+    await probe('click', { selector: '#tab-canvas' });
 
     // Reproduce the reported workflow with actual VS Code document edits and
     // real clicks inside the production Webview, including focus away from the

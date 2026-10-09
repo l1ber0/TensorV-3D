@@ -1,12 +1,14 @@
 # VS Code 插件
 
+本 Fork 的三维预览安装和中英文教程见 [中文 README](../README.md) / [English README](../README.en.md)。插件 ID 为 `l1ber0.tensorv-3d`。
+
 TensorV 在 VS Code 中运行 Python 文件或选区，将执行结果显示为张量快照。运行整个文件后，检查器与该文件建立源码联动，后续修改可直接更新检查结果。它使用你选择的 Python 环境，自动管理执行子进程；不需要打开终端启动 TensorV 服务，也不需要填写服务器地址。
 
 ## 安装 VSIX
 
 需要 VS Code 1.90+，以及安装了 `torch`、`numpy` 的 Python 3.10+ 环境。VSIX 包含界面和 TensorV 的 Python 源码，不包含 Python 或 PyTorch。日常使用无需 Node.js。
 
-当前插件尚未发布到 Marketplace。获取本地构建的 `tensorv-0.4.1.vsix`，或从对应成功的 GitHub Actions 运行页面下载 VSIX 产物并解压，然后：
+当前插件尚未发布到 Marketplace。获取本地构建的 `tensorv-3d-0.4.2.vsix`，或从对应成功的 GitHub Actions 运行页面下载 VSIX 产物并解压，然后：
 
 1. 在 VS Code 的“扩展”视图点击 `…`。
 2. 选择“从 VSIX 安装”，打开 `.vsix` 文件。
@@ -15,7 +17,7 @@ TensorV 在 VS Code 中运行 Python 文件或选区，将执行结果显示为�
 也可以通过终端安装：
 
 ```sh
-code --install-extension path/to/tensorv-0.4.1.vsix
+code --install-extension path/to/tensorv-3d-0.4.2.vsix
 ```
 
 从源码构建时，先在仓库根目录安装前端依赖，再运行：
@@ -26,7 +28,7 @@ npm ci --prefix extensions/vscode
 npm run package:vscode
 ```
 
-产物为 `extensions/vscode/tensorv-0.4.1.vsix`。构建命令不会发布到 Marketplace，也不会更新线上演示实例。
+产物为 `extensions/vscode/tensorv-3d-0.4.2.vsix`。构建命令不会发布到 Marketplace，也不会更新线上演示实例。
 
 ## 选择 Python
 

@@ -35,7 +35,7 @@ export async function buildExtension({ packageVsix = false, skipFrontend = false
     const vsce = resolve(extension, 'node_modules/@vscode/vsce/vsce');
     if (!existsSync(vsce)) throw new Error('Install packaging dependencies first: npm install --prefix extensions/vscode');
     const manifest = JSON.parse(await readFile(resolve(extension, 'package.json'), 'utf8'));
-    const output = resolve(extension, `tensorv-${manifest.version}.vsix`);
+    const output = resolve(extension, `${manifest.name}-${manifest.version}.vsix`);
     run(process.execPath, [vsce, 'package', '--no-dependencies', '--allow-missing-repository', '--skip-license', '--out', output], extension);
     console.log(`Install VSIX in VS Code: ${output}`);
   }

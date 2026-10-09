@@ -12,3 +12,5 @@ test-results/
 playwright-report/
 extensions/vscode/runtime/
 *.vsix
+# Machine-specific demo interpreter choices stay local.
+demo-3d/.vscode/settings.json

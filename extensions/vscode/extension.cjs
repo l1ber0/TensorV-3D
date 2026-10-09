@@ -152,7 +152,7 @@ class TensorVController {
     return panel;
   }
 
-  async runEditor(selectionOnly) {
+  async runEditor(selectionOnly, preview3d = false) {
     this.trusted();
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'python') throw new Error('请先打开一个 Python 文件。');
@@ -172,7 +172,7 @@ class TensorVController {
     }
     const record = { ...source, uri: editor.document.uri };
     const title = path.basename(editor.document.fileName) + (selectionOnly ? ` · 选区 L${record.lineOffset + 1}` : '');
-    const message = { type: 'tensorv:import', code, title, source };
+    const message = { type: 'tensorv:import', code, title, source, preview3d };
     this.importRecords.set(message, record);
     await this.imports.enqueue(message);
   }
@@ -350,6 +350,7 @@ function activate(context) {
     catch (error) { await vscode.window.showErrorMessage(`TensorV：${error.message}`); }
   }));
   register('open', () => { controller.open(); });
+  register('preview3d', () => controller.runEditor(false, true));
   register('openExperiment', () => controller.openExperiment());
   register('runFile', () => controller.runEditor(false));
   register('runSelection', () => controller.runEditor(true));
@@ -358,7 +359,7 @@ function activate(context) {
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
     if (event.affectsConfiguration('tensorv.pythonPath')) void controller.restart(false);
   }));
-  return { version: '0.4.1' };
+  return { version: context.extension.packageJSON.version };
 }
 
 async function deactivate() { await controller?.dispose(); }

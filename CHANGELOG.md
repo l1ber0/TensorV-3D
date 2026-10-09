@@ -1,5 +1,13 @@
 # 更新记录
 
+## 0.4.2 — 3D fork / 三维增强
+
+- Add interactive 3D vector arrows and bounded tensor cube windows, with rotation, zoom, pan, and value picking.
+- Add `tensorv.preview3d` to open the inspector beside the Python editor and enable automatic execution of unsaved edits.
+- Preserve the existing tensor inspector and experiment format; sharing from the 3D tab opens the 2D canvas.
+- Publish as `l1ber0.tensorv-3d` with Chinese and English installation / usage tutorials and explicit upstream attribution.
+- 保留 Livia-Tassel/TensorV 的 Git 历史与 `UNLICENSED` 状态；第三方 Three.js 的 MIT 声明随插件打包。
+
 ## 0.4.1 — 2026-10-07
 
 - 修复 VS Code 运行全文后，继续修改原文件却仍检查旧代码的问题；检查器与运行文件建立源码联动，包括尚未保存的修改。

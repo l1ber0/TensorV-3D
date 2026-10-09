@@ -1,108 +1,142 @@
-# TensorV
+# TensorV 3D Live Preview
 
-TensorV 是面向 PyTorch 的张量检查工具。它执行 Python 代码，记录语句级张量快照，并在同一工作区中展示数值、形状、步长和底层存储关系。
+**中文** | [English](README.en.md)
 
-适用于算子行为验证、张量布局调试和短程序演示。当前执行环境以 CPU 为主；它不提供训练任务管理、分布式计算或通用 Notebook 服务。
+在 VS Code 中一边写 Python，一边查看 **三维向量箭头、立体张量格子和 PyTorch 张量快照**。停止输入约 650 ms 后，右侧检查器会用最新代码更新结果，包括尚未保存的修改。
 
-## 在线访问
+这是基于 [Livia-Tassel/TensorV](https://github.com/Livia-Tassel/TensorV) 的独立维护 Fork，由 [l1ber0](https://github.com/l1ber0) 增加三维视图。**特别感谢原作者 Livia-Tassel**：原项目提供了张量执行引擎、快照检查、源码联动和 VS Code 集成，为本项目奠定了基础。
 
-[打开 TensorV 工作区](https://tensorv.43.135.182.151.nip.io)
-
-公共演示实例通过 HTTPS 访问，Python 代码在服务器上的独立 gVisor 沙箱中执行，访问者无需安装环境或保持本地服务运行。当前采用单执行并发，单次执行默认限制为 20 秒、1 核 CPU 和 512 MiB 内存，并设置访问频率和会话限额；繁忙时请稍后重试。
-
-当前源码版本为 **0.4.1**。版本能力以实际部署的网页或安装的 VSIX 为准；仅构建或推送代码不会自动替换正在运行的公共实例。
-
-脚本保存在访问者的浏览器中，运行时提交到服务器。不要向公共实例提交密钥或机密数据。需要本机执行或独立资源时，可按下文进行本地部署，或参照[服务器部署](docs/server-deployment.md)自行运行。
-
-![TensorV 工作区](docs/assets/workspace.png)
+> 许可状态：上游没有提供 LICENSE，原插件标为 `UNLICENSED`。本仓库保留该状态，公开源码不代表获得 MIT、Apache 等开源许可。请阅读 [许可与署名说明](LICENSE_STATUS.md)。本项目与上游的在线服务及发布相互独立。
 
 ## 功能
 
-| 工作区 | 能力 |
-| --- | --- |
-| 代码编辑 | Python 语法高亮、多脚本管理、自动保存、文件导入导出、手动或自动运行 |
-| 执行检查 | 语句级轨迹、自选对照步骤、步骤回放、异常位置及标准输出 |
-| 形状诊断 | 广播、矩阵乘法、reshape / view 的输入形状、冲突维度与修改建议 |
-| 张量浏览 | 高维切片、二维分页、数值精度设置、热力图、坐标锁定 |
-| 存储分析 | shape、dtype、stride、storage offset、连续性和共享存储关联 |
-| 数据分析 | 快照统计、当前切片分布、CSV / JSON 导出 |
-| 实验分享 | 链接及 `.tensorv.json` 文件保存代码、环境记录、步骤、变量、切片与对照基准；打开后先预览再运行 |
-| 示例库 | 13 个可编辑示例，覆盖形状变换、广播、归约、矩阵乘法、内存视图与自动求导 |
-| VS Code 插件 | 文件源码联动、独立选区执行、本机解释器选择、源码定位及文件导出 |
+- **向量箭头**：支持 `[3]`、`[N, 3]`、`[3, N]`；`[3, 3]` 默认每行一个向量。
+- **立体张量**：至少三维的张量显示为数值着色的格子；高维张量可固定前面的维度索引。
+- **交互查看**：拖动旋转、滚轮缩放、右键拖动平移，悬停查看坐标与原始数值。
+- **源码联动**：在 VS Code 原编辑器修改代码，检查器自动重新执行全文；无需保存。
+- **原有检查功能**：语句快照、前后对照、二维切片、存储映射、数值统计、CSV / JSON 导出。
 
-## VS Code 中使用
+## 安装
 
-下载并安装 [tensorv-0.4.1.vsix](https://tensorv.43.135.182.151.nip.io/downloads/tensorv-0.4.1.vsix)，打开可信工作区，然后在 Python 编辑器中选择 **TensorV: 运行当前 Python 文件** 或 **TensorV: 运行所选 Python 代码**。检查器在 VS Code 内打开，使用扩展宿主上的 Python；无需手动启动 HTTP 服务。解释器需要 Python 3.10+、`torch` 和 `numpy`，安装 VSIX 后日常使用无需 Node.js。
+1. 从 [Releases](https://github.com/l1ber0/TensorV-3D/releases) 下载 `tensorv-3d-0.4.2.vsix`。
+2. 在 VS Code 扩展页面点击 `…` → **从 VSIX 安装**，选择下载的文件。
+3. 按提示重新加载窗口。若之前安装了上游 `livia-tassel.tensorv`，先卸载或禁用它，避免同名命令冲突。
 
-插件尚未上架 Marketplace。可从对应成功的 GitHub Actions 运行产物中下载 VSIX 归档，或在源码根目录依次执行 `npm ci`、`npm ci --prefix extensions/vscode`、`npm run package:vscode`，生成 `extensions/vscode/tensorv-0.4.1.vsix`。安装步骤、解释器设置和运行边界见 [VS Code 插件](docs/vscode.md)。
-
-运行全文后，检查器与该文件建立源码联动：左侧未保存的修改也会同步，开启自动运行时停止编辑约 650 ms 后执行；关闭时标记结果待更新，右侧“运行”读取最新源码。绑定代码在检查器中为只读镜像，仍在原 Python 编辑器中修改。
-
-选区按独立副本执行，不会自动补齐上下文或隐式执行整个文件。插件不读取调试器中的变量；示例和导入实验保持独立。插件执行可信 Python，具有所选解释器的文件和网络权限。
-
-## 分享实验
-
-在工作区中运行代码并选好观察位置，然后打开“分享实验”，复制链接或导出 `.tensorv.json`。接收方打开后会得到新的脚本副本，先检查代码，再点击运行以恢复步骤、变量、切片和对照基准。VS Code 也可用 **TensorV: 打开实验文件** 导入同一文件。
-
-链接直接携带代码，没有公共实验库或访问控制；请勿放入密钥或机密数据。实验保存的是代码和观察设置，不包含张量数值、依赖包或外部文件，也不保证不同环境下结果完全一致。格式、限制与使用方式见[保存与分享实验](docs/experiments.md)。
-
-## 本地运行
-
-需要 Git、Python 3.10 或更高版本，以及 Node.js 20.19+ 或 22.12+。Python 版本和平台须有可安装的 PyTorch 发行包。首次安装需要网络访问。
-
-**Windows PowerShell**
-
-```powershell
-git clone https://github.com/Livia-Tassel/TensorV.git
-cd TensorV
-.\start.ps1
-```
-
-**macOS / Linux**
+也可以在终端安装：
 
 ```sh
-git clone https://github.com/Livia-Tassel/TensorV.git
-cd TensorV
-sh start.sh
+code --install-extension tensorv-3d-0.4.2.vsix
 ```
 
-访问 [http://127.0.0.1:8765](http://127.0.0.1:8765)。启动脚本创建虚拟环境、补齐缺失依赖、构建前端并启动 Python 服务；按 `Ctrl+C` 停止。
+**安装后是独立插件**：不需要保留源码仓库，不用启动 HTTP 服务，也不用日常运行 Node.js。VSIX 包含前端和 TensorV 执行引擎，但不包含 Python 和 PyTorch。目前未发布到 Marketplace。
 
-使用期间需要保持 **Python 服务运行**。前端构建完成后由 Python 提供静态文件，日常运行不需要启动 Vite，也不需要常驻 Node.js 进程。关闭服务后，浏览器不能执行代码或请求新的切片。
+### 环境要求
 
-本地模式运行当前用户信任的 Python 代码，拥有该用户的文件和网络权限。不要将本地模式通过端口转发或反向代理公开。面向其他用户的部署请使用独立的公共执行模式，参见[服务器部署](docs/server-deployment.md)。
+- VS Code **1.90+**。
+- Python **3.10+**，且所选版本与系统能安装 PyTorch。
+- 在插件使用的解释器中安装依赖：
 
-安装过程、手动启动、更新和故障排查见[本地部署](docs/local-deployment.md)。
+```sh
+python -m pip install torch numpy
+```
 
-## 使用
+如果电脑里有多个 Python，按 `Ctrl+Shift+P`（macOS 为 `Cmd+Shift+P`），运行 **TensorV: 选择 Python 解释器**，选择已安装依赖的环境。也可配置工作区：
 
-1. 新建脚本，或从侧栏选择示例、导入 `.py` 文件。
-2. 点击“运行”，或使用 `Ctrl / ⌘ + Enter`。自动运行可在顶部开关中控制。
-3. 在执行步骤中选择语句，再选择需要检查的 Tensor。
-4. 在张量画布中调整维度和索引；切换到存储映射或数值统计继续分析。
-5. 下载代码，或将当前切片导出为 CSV / JSON。
+```json
+{
+  "tensorv.pythonPath": "${workspaceFolder}/.venv/Scripts/python.exe"
+}
+```
 
-脚本保存在当前浏览器的本地存储中，不会在不同设备间自动同步。清除站点数据会删除这些脚本；需保留的代码应下载为文件。运行时，代码会发送到当前连接的执行服务。
+macOS / Linux 的虚拟环境通常使用 `${workspaceFolder}/.venv/bin/python`。解释器选择顺序：显式配置 → 工作区 `.venv` → Microsoft Python 扩展选择的解释器 → PATH 中的 `python`。
 
-操作说明和数据语义见[用户指南](docs/user-guide.md)。
+## 使用教程
 
-## 部署与运行边界
+1. 打开并信任你的 Python 项目，可以用仓库中的 [示例文件](demo-3d/vectors_and_tensor.py)。
+2. 打开 `.py` 文件，按 `Ctrl+Shift+P`，运行 **TensorV: 三维实时预览（自动运行）**，或点击编辑器标题栏中的三维预览按钮。
+3. 检查器在右侧打开，自动运行开启。在「三维视图」的「张量」下拉框里选择变量。
+4. 修改左侧坐标或 shape，停止输入约 650 ms 后查看更新。也可关闭「自动运行」，手动点击「运行」。
 
-网页版包含浏览器前端和 Python 执行服务，不能仅通过静态网页托管提供完整功能。本地网页版的服务位于用户计算机；服务器部署后，服务由服务器持续运行，访问者只需浏览器。VS Code 插件复用同一前端和执行引擎，通过扩展宿主管理 Python 子进程，不监听 HTTP 端口。
+将下面的代码复制到自己的文件即可试用：
 
-本地模式每个 Tensor 最多保留 100,000 个元素，单次执行的历史数值预算为 64 MiB，最多记录 128 步、每步 32 个 Tensor。公共模式采用更严格的资源和快照限制。界面每页最多展示 24 × 24 个元素。详见[架构与执行模型](docs/architecture.md)。
+```python
+import torch
 
-## 文档
+vectors = torch.tensor([
+    [3.0, 1.0, 2.0],
+    [-2.0, 3.0, 1.0],
+    [1.0, -2.0, 3.0],
+])
+cube = torch.arange(64, dtype=torch.float32).reshape(4, 4, 4)
+transposed = cube.transpose(0, 2)
+```
 
-| 文档 | 内容 |
+### 箭头和方块怎么切换
+
+执行步骤与张量选择是两个独立控件。**只有在当前步骤已经创建的变量，才会出现在「张量」列表中。** 已选择的变量会保留，点击其他步骤不会强制切换变量。
+
+| 想查看 | 先选择执行步骤 | 再选择「张量」 | 「视图」设置 |
+| --- | --- | --- | --- |
+| 三个箭头 | `vectors` 或其后的步骤 | `vectors [3, 3]` | 自动 / 向量箭头 |
+| 64 个方块 | `cube` 或其后的步骤 | `cube [4, 4, 4]` | 自动 / 立体张量 |
+| 转置后的方块 | `transposed` 步骤 | `transposed [4, 4, 4]` | 自动 / 立体张量 |
+
+**只有箭头没有方块时**：先点上方 `cube` 或 `transposed` 步骤，再从下方「张量」列表选同名变量。在 `vectors` 创建后的第一步，`cube` 还不存在。
+
+## 三维操作与显示范围
+
+| 操作 | 效果 |
 | --- | --- |
-| [本地部署](docs/local-deployment.md) | 环境准备、启动、更新、卸载与常见问题 |
-| [VS Code 插件](docs/vscode.md) | VSIX 安装、解释器选择、文件与选区检查、执行边界 |
-| [用户指南](docs/user-guide.md) | 脚本管理、执行检查、切片、统计及导出 |
-| [保存与分享实验](docs/experiments.md) | 分享链接、实验文件、预览运行、状态恢复和隐私边界 |
-| [服务器部署](docs/server-deployment.md) | 公共服务的执行隔离、安装与入口配置 |
-| [运行维护](docs/operations.md) | 健康检查、日志、更新、故障处理与恢复 |
-| [架构与执行模型](docs/architecture.md) | 组件、数据流、接口与能力边界 |
-| [开发指南](CONTRIBUTING.md) | 开发环境、验证和变更提交 |
-| [安全说明](SECURITY.md) | 信任边界、公开部署要求与问题报告 |
-| [更新记录](CHANGELOG.md) | 版本变化和升级要求 |
+| 左键拖动 / 滚轮 / 右键拖动 | 旋转 / 缩放 / 平移 |
+| 悬停箭头端点或方块 | 查看向量坐标 / 元素索引和数值 |
+| 「重置视角」 | 重新适配视图 |
+| 聚焦画布后按方向键 / `R` | 旋转 / 重置 |
+
+向量每页最多 **24 个**，用起点查看后续向量。向量按统一比例适配视图，列表保留原始值；零向量显示为原点圆点。
+
+立体张量每个窗口最多 **12×12×12 个格子**。最后三个维度对应 **Z、Y、X**；前面的维度使用固定索引，各三维维度使用窗口起点。蓝色到红色表示数值从小到大。非连续张量按逻辑坐标读取。
+
+NaN、Inf、复数和无法精确表示的大整数不参与三维绘制，并显示跳过数量。三维绘制需要 WebGL / 硬件加速；数值不可用时仍可查看元数据。
+
+## 运行边界
+
+- 自动运行会**执行整个文件**，适合独立的张量实验代码。Python 具有当前用户的文件和网络权限，请只运行信任的代码。
+- 这是顶层语句执行后的快照检查器，不读取调试器变量，也不逐次跟踪函数内部或循环的每次迭代。
+- 引擎限制：最多 20,000 字符、128 个步骤、每步 32 个张量、单张量 100,000 个元素、历史数值预算 64 MiB；单次执行默认 8 秒。
+- 插件通过本机 Python 子进程通信，不把源码提交到上游公共实例；用户代码自身仍可访问网络。
+- 分享实验沿用原版格式，保存二维查看位置，不保存三维相机或三维选择；在三维标签分享时，接收方从张量画布打开。
+
+## 常见问题
+
+| 问题 | 处理 |
+| --- | --- |
+| `No module named torch` | 给插件实际选择的 Python 安装依赖，或重新选择解释器 |
+| 编辑后不更新 | 检查「源码联动」和「自动运行」；切换文件后需在新文件运行三维预览 |
+| 方块不出现 | 先选已创建 `cube` 的执行步骤，再选 `cube` 张量，确认形状至少三维 |
+| 三维画布无法创建 | 启用 VS Code 硬件加速 / 检查显卡支持，暂用「张量画布」 |
+| 源文件关闭后无法运行 | 重新打开文件并执行三维预览，恢复联动 |
+| 命令重复或冲突 | 卸载 / 禁用上游 TensorV，只启用 `l1ber0.tensorv-3d` |
+
+## 从源码构建
+
+构建需要 Git 和 Node.js **20.19+ 或 22.12+**，推荐 Node.js 22；日常使用插件无需 Node.js。
+
+```sh
+git clone https://github.com/l1ber0/TensorV-3D.git
+cd TensorV-3D
+npm ci
+npm ci --prefix extensions/vscode
+npm run package:vscode
+```
+
+产物：`extensions/vscode/tensorv-3d-0.4.2.vsix`。
+
+验证命令：`npm test`、`npm run test:vscode`、`npm run test:ui`。多 Python 环境可设置 `TENSORV_PYTHON` 指向测试解释器。Windows 可用 `scripts/test-vscode-host.ps1 -PythonPath <解释器路径>` 验证真实扩展宿主。详见 [开发指南](CONTRIBUTING.md)。
+
+## 致谢与来源
+
+- [Livia-Tassel / TensorV](https://github.com/Livia-Tassel/TensorV)：感谢原作者及上游贡献者提供执行引擎、二维检查器、源码同步和 VS Code 插件。本 Fork 保留原有 Git 历史，开始修改时的上游提交为 [`19aa185`](https://github.com/Livia-Tassel/TensorV/commit/19aa185)。
+- [Three.js](https://threejs.org/)：三维绘制与 OrbitControls，许可声明见 [THIRD_PARTY_NOTICES.txt](extensions/vscode/THIRD_PARTY_NOTICES.txt)。
+- [PyTorch](https://pytorch.org/) 和 [CodeMirror](https://codemirror.net/)：张量计算和编辑器。
+
+感谢 **Livia-Tassel** 公开分享 TensorV，让这项三维增强有了基础。本仓库由 l1ber0 维护，不代表原作者，不修改原作者的在线实例。原版介绍保留在 [README.upstream.md](README.upstream.md)，其他原版文档位于 [docs/](docs/)。
